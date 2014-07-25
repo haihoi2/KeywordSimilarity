@@ -69,7 +69,7 @@ namespace Arnetminer
         venue = new Venue(idvenue, value, name, new Dictionary<int, Publication>());
         foreach (string ip in iPubs)
         {
-          if (ip!="")
+          if (ip != "")
             venue.liPublications.Add(Convert.ToInt32(ip));
         }
       }
