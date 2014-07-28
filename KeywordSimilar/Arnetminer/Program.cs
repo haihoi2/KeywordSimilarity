@@ -6,6 +6,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using FuzzyStrings;
+using System.Text.RegularExpressions;
 
 namespace Arnetminer
 {
@@ -21,7 +23,7 @@ namespace Arnetminer
     const string strRefId = "#%";
     const string strAbstract = "#!";
 
-    static private string directory = @"G:\dblp\2013\";
+    static private string directory = @"G:\dblp\2014\dblp-2014-06-28\";//@"G:\dblp\2013\";
     /*public static Dictionary<int, Publication> dicAllPubs = Publication.dicAllPubs;
     public static Dictionary<int, Author> dicAllAuthors = Author.dicAllAuthors;
     public static Dictionary<int, Venue> dicAllVenues = Venue.dicAllVenues;
@@ -34,24 +36,75 @@ namespace Arnetminer
     static void Main(string[] args)
     {
       totalAuthor = totalVenue = 0;
-      
-      string fileauthor = "test-author.csv";
-      string filevenue = "test-venue.csv";
-      string filepub = "test-pub.csv";
 
-      ReadAuthorFromFile(directory + fileauthor);
-      ReadVenueFromFile(directory + filevenue);
+      string fileauthor = "authors-1274359.csv";
+      string filevenue = "venues-8882.csv";
+      string filepub = "publications-2244017.csv";
+      /* remove not map dblp -----------------------------------*/
+      string filepubnotmapped = "pub-arnet-not-mapping-stemming-32631.csv";
+      List<Publication> liTitleArnet = ReadPublicationTitleFromFile(directory + filepubnotmapped, false);
+      List<int> liPubsnotMapped = (from x in liTitleArnet select x.idPaper).ToList();
+      liTitleArnet.Clear();
+      
       ReadPublicationFromFile(directory + filepub);
+     
+      foreach (int k in liPubsnotMapped)
+        Publication.dicAllPubs.Remove(k);
+      
+      //Remove refid not in new dic
+      Parallel.ForEach(Publication.dicAllPubs, pub =>
+      {
+        if (pub.Value.idPaper == 500112)
+        {
+          Console.WriteLine(pub.Value.ToString());
+        }
+        pub.Value.liReferenceIds.RemoveAll(x => liPubsnotMapped.Contains(x));
+        if (pub.Value.idPaper == 500112)
+        {
+          Console.WriteLine(Publication.dicAllPubs[500112].ToString());
+        }
+      }
+      );
+      
       UpdatingCitation();
+
+      /*------------------------------------------------------------*/
+      ReadAuthorFromFile(directory + fileauthor);
+      //Remove pubid of author not in new dic
+      Parallel.ForEach(Author.dicAllAuthors, au =>
+      {        
+        au.Value.liPublications.RemoveAll(x => liPubsnotMapped.Contains(x));        
+      }
+      );
+      ReadVenueFromFile(directory + filevenue);
+      //Remove pubid of venue not in new dic
+      Parallel.ForEach(Venue.dicAllVenues, ve =>
+      {
+        ve.Value.liPublications.RemoveAll(x => liPubsnotMapped.Contains(x));
+      }
+      );
+
+      liPubsnotMapped.Clear();
+      /* end remove not map dblp -----------------------------------*/
+
+      WriteToFile(Author.dicAllAuthors, "a-mapped-");
+      WriteToFile(Venue.dicAllVenues, "v-mapped-");
+      WriteToFile(Publication.dicAllPubs, 1, "p-mapped-");
+
       int iCite = Publication.dicAllPubs.Values.Sum(x => x.liCitationIds.Count);
       int iRef = Publication.dicAllPubs.Values.Sum(x => x.liReferenceIds.Count);
       Console.WriteLine("Cite={0}, Ref={1}", iCite, iRef);
       DoNStarCalculation(directory, 1000, 1, 0.25, 0.25, 0.45);
       DoPageRankCalculation(directory, 1000, 1, 0.45);
-       
-      //string filename = "acm_output.txt";
+
+
+
+      /*parse raw data ----------------------------------------------------------
+      string filename = "acm_output.txt";
       //ParseDataArnetMiner(directory + filename);
-      /*string strPrefixfile = "publication-*";      
+      ---------------------------------------------------------------------------*/
+      /*Parse structure data to entity-------------------------------------------
+       * string strPrefixfile = "publication-*";      
       string[] files = Directory.GetFiles(directory,strPrefixfile).ToArray();     
       foreach (string f in files)
       {
@@ -62,9 +115,108 @@ namespace Arnetminer
       int iRef = Publication.dicAllPubs.Values.Sum(x => x.liReferenceIds.Count);
       WriteToFile(Author.dicAllAuthors, "authors-");
       WriteToFile(Venue.dicAllVenues, "venues-");
-      WriteToFile(Publication.dicAllPubs, 1, "publications-");*/
+      WriteToFile(Publication.dicAllPubs, 1, "publications-");
+       ---------------------------------------------------------------------------*/
+      /*---------------------------------------------------------------------------
+      MappingArnetDBLP();
+      ----------------------------------------------------------------------------*/
       Console.WriteLine("DONE");
       Console.ReadLine();
+    }
+
+    private static void MappingArnetDBLP()
+    {
+      string filetitledblp = "pub-dblp-not-mapping-479058.csv"; //"pub-title-dblp.csv"
+      string filetitlearnet = "pub-arnet-not-mapping-34306.csv";//"pub-title-arnet.csv"
+
+      List<Publication> liTitleArnet = ReadPublicationTitleFromFile(directory + filetitlearnet, false);
+      string stopword = @"[^a-zA-z0-9]+";
+      //string stopword = @"[ \r\t\n.,;:'""()?!-><#$\\%&*+/@^_=[]{}|`~0123456789·‘’“”\\«ª©¯¬£¢§™•ϵϕ­ ´]";
+
+      Parallel.ForEach(liTitleArnet, t =>
+      {
+        t.strAbstract = Regex.Replace(t.title, stopword, "").ToLower();
+        t.index = t.strAbstract.GetHashCode();
+      }
+      );
+      liTitleArnet = liTitleArnet.OrderBy(x => x.index).ToList();
+
+      List<Publication> liTitleDBLP = ReadPublicationTitleFromFile(directory + filetitledblp, true);
+      Parallel.ForEach(liTitleDBLP, t =>
+      {
+        t.strAbstract = Regex.Replace(t.title, stopword, "").ToLower();
+        t.arnetid = t.strAbstract.GetHashCode();
+      }
+      );
+      liTitleDBLP = liTitleDBLP.OrderBy(x => x.arnetid).ToList();
+
+      Publication pdblp = liTitleDBLP[0];
+      Publication parnet = liTitleArnet[0];
+      int i = 0, j = 0, count = 0;
+      //using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + "not-mapping-need-review.csv")))
+      //using (StreamWriter filemapping = new System.IO.StreamWriter(Path.GetFullPath(directory + "mapping-ok.csv")))
+      {
+        //file.Write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\r\n", "idArnet", "titleArnet",
+        //  "idDBLP", "titleDBLP", "levenDistance", "longcommonstring");
+        //filemapping.Write("idPaper\t|title\t|HashCode\t|year\t|venue\t|curValue\r\n");
+
+        while (i < liTitleDBLP.Count && j < liTitleArnet.Count)
+        {
+          while ((i < liTitleDBLP.Count) && (pdblp.arnetid < parnet.index)) //stemming
+          //while ((i < liTitleDBLP.Count) && (pdblp.index < parnet.arnetid))
+          {
+            //int leven = parnet.title.LevenshteinDistance(pdblp.title);
+            //var lcs = parnet.title.LongestCommonSubsequence(pdblp.title);
+            //file.Write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\r\n", parnet.idPaper, parnet.title,
+            //  pdblp.idPaper, pdblp.title, leven, lcs.Item2.ToString("###,###.00000"));
+            i++;
+            if (i < liTitleDBLP.Count)
+              pdblp = liTitleDBLP[i];
+          }
+          while ((j < liTitleArnet.Count) && (pdblp.arnetid > parnet.index)) //stemming
+          //while ((j < liTitleArnet.Count) && (pdblp.index > parnet.arnetid))
+          {
+            //int leven = parnet.title.LevenshteinDistance(pdblp.title);
+            //var lcs = pdblp.title.LongestCommonSubsequence(pdblp.title);
+            //file.Write("{0}\t{1}\t{2}\t{3}\t{4}\t{5}\r\n", parnet.idPaper, parnet.title,
+            //  pdblp.idPaper, pdblp.title, leven, lcs.Item2.ToString("###,###.00000"));
+            j++;
+            if (j < liTitleArnet.Count)
+              parnet = liTitleArnet[j];
+          }
+          if (pdblp.arnetid == parnet.index) //stemming
+          //if (pdblp.index == parnet.arnetid)
+          {
+            // filemapping.Write(parnet.ToStringHashcode());           
+            parnet.curValue = -100;
+            pdblp.curValue = -100;
+            count++;
+            i++; j++;
+            if (i < liTitleDBLP.Count)
+              pdblp = liTitleDBLP[i];
+            if (j < liTitleArnet.Count)
+              parnet = liTitleArnet[j];
+          }
+        }
+      }
+      WriteToFile(liTitleDBLP.Where(x => x.curValue != -100).ToList(), "pub-dblp-not-mapping-stemming-" + liTitleDBLP.Where(x => x.curValue != -100).Count().ToString());
+      liTitleDBLP.Clear();
+      WriteToFile(liTitleArnet.Where(x => x.curValue != -100).ToList(), "pub-arnet-not-mapping-stemming-" + liTitleArnet.Where(x => x.curValue != -100).Count().ToString());
+      WriteToFile(liTitleArnet.Where(x => x.curValue == -100).ToList(), "pub-mapping-stemming-" + liTitleArnet.Where(x => x.curValue == -100).Count().ToString());
+      
+    }
+
+    private static void WriteToFile(List<Publication> li, string filename)
+    {
+      using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + filename + ".csv")))
+      {
+        file.Write("idPaper\t|title\t|HashCode\t|year\t|venue\t|curValue\r\n");
+        foreach (Publication p in li)
+        {          
+          file.Write(p.ToStringHashcode());
+        }
+      }
+      GC.Collect();
     }
 
     private static void DoPageRankCalculation(string directory, int stoploop, int stopval, double damplingfactor)
@@ -266,6 +418,45 @@ namespace Arnetminer
       });
       Venue.dicAllVenues = results.ToDictionary(x => x.idVenue, x => x);
     }
+    public static List<Publication> ReadPublicationTitleFromFile(string str, bool isDBLP)
+    {
+      IEnumerable<string> lines = File.ReadLines(Path.GetFullPath(str));
+      var line = lines.Where(x => (x != ""));
+      var results = new ConcurrentQueue<Publication>();
+      Parallel.ForEach(line, l =>
+      {
+        Publication pub = Publication.FromHashCodeLine(l, isDBLP);
+        if (pub != null)
+        {
+          results.Enqueue(pub);
+        }
+      });
+      if(isDBLP)
+        return results.OrderBy(x => x.index).ToList();
+      else
+        return results.OrderBy(x => x.arnetid).ToList();
+    }
+    public static List<Publication> ReadPublicationTitleNotMappingFromFile(string str, bool isDBLP, bool notMapping)
+    {
+      IEnumerable<string> lines = File.ReadLines(Path.GetFullPath(str));
+      var line = lines.Where(x => (x != ""));
+      var results = new ConcurrentQueue<Publication>();
+      foreach (string l in line)
+      //Parallel.ForEach(line, l =>
+      {
+        Publication pub = Publication.FromHashCodeLine(l, isDBLP,notMapping);
+        if (pub != null)
+        {
+          results.Enqueue(pub);
+        }
+      }
+      //);
+      if (isDBLP)
+        return results.OrderBy(x => x.index).ToList();
+      else
+        return results.OrderBy(x => x.arnetid).ToList();
+    }
+
     public static void ReadAuthorFromFile(string str)
     {
       IEnumerable<string> lines = File.ReadLines(Path.GetFullPath(str));
@@ -459,10 +650,16 @@ namespace Arnetminer
         file.Write("idPaper\tcurValue\ttitle\tstring.Join(liAuthors)\t"+
           "year\tvenue\tcitationnumber\tindex\tarnetid\tstrAbstract\t"+
           "string.Join(liReferenceIds)\tstring.Join(liCitationIds)\tidVenue\r\n");
+        //StringBuilder sb = new StringBuilder();
+        int count = 0;
+        //sb.AppendLine("idPaper~title~HashCode~year~venue");
         foreach (Publication p in dicPubs.Values)
         {
-          file.Write(p.ToString());
+         // sb.AppendLine(p.ToStringHashcode());
+         file.Write(p.ToString());
         }
+        //File.AppendAllText(Path.GetFullPath(directory + filename + ".csv"), sb.ToString());
+        //sb.Clear();
       }
       GC.Collect();
     }

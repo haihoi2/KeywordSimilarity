@@ -164,6 +164,88 @@ namespace Arnetminer
       }
       return pub;
     }
+    static public Publication FromHashCodeLine(string line, bool isDBLP)
+    {
+      
+      Publication pub = null;
+      try
+      {
+        if (isDBLP)
+        {
+          string[] datas = line.Split('\t');
+          pub = new Publication()
+          {
+            idPaper = Convert.ToInt32(datas[0].Trim('|')),
+            title = datas[1].Trim('|'),
+            index = Convert.ToInt32(datas[2].Trim('|')),
+            //liReferenceIds = new List<int>(),
+            //liCitationIds = new List<int>()
+          };
+        }
+        else
+        {
+          string[] datas = line.Split('\t');
+          pub = new Publication()
+          {
+            idPaper = Convert.ToInt32(datas[0].Trim('|')),
+            title = datas[1].Trim('|'),
+            arnetid = Convert.ToInt32(datas[2].Trim('|')),
+            year = Convert.ToInt32(datas[3].Trim('|')),
+            //venue = datas[4],
+            //liReferenceIds = new List<int>(),
+            //liCitationIds = new List<int>()
+          };
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine("Error {0} at line:{1}", ex.Message, line);
+      }
+      return pub;
+    }
+    static public Publication FromHashCodeLine(string line, bool isDBLP, bool notMapping)
+    {
+
+      Publication pub = null;
+      try
+      {
+        if (isDBLP)
+        {
+          string[] datas = line.Split('~');
+          pub = new Publication()
+          {
+            idPaper = Convert.ToInt32(datas[0]),
+            title = datas[1],
+            index = Convert.ToInt32(datas[2]),
+            //liReferenceIds = new List<int>(),
+            //liCitationIds = new List<int>()
+          };
+        }
+        else if (notMapping)
+        {
+          string[] datas = line.Split('\t');
+          int value= Convert.ToInt32(datas[4].Trim('|'));
+          if (value == -100)
+          {
+            pub = new Publication()
+            {
+              idPaper = Convert.ToInt32(datas[0].Trim('|')),
+              title = datas[1].Trim('|'),
+              arnetid = Convert.ToInt32(datas[2].Trim('|')),
+              year = Convert.ToInt32(datas[3].Trim('|')),
+              //venue = datas[4],
+              //liReferenceIds = new List<int>(),
+              //liCitationIds = new List<int>()
+            };
+          }
+        }
+      }
+      catch (Exception ex)
+      {
+        Console.WriteLine("Error {0} at line:{1}", ex.Message, line);
+      }
+      return pub;
+    }
     public override string ToString()
     {
       return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}\t|{9}\t|{10}\t|{11}\t|{12}\r\n",
@@ -175,12 +257,21 @@ namespace Arnetminer
     }
     public string ToStringSimple()
     {
-      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}\r\n",
-        this.idPaper, this.curValue,
-        this.liAuthors.Count,string.Join("|", this.liAuthors),
-        this.year, (this.venue==""?"NoName":this.venue), 
-        this.citationnumber,
-        this.liReferenceIds.Count(), string.Join("|", this.liReferenceIds));
+      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t{5}",
+        this.idPaper, this.title, this.title.GetHashCode().ToString(),
+        this.year, (this.venue == "" ? "NoName" : this.venue),curValue);
+      //return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}\r\n",
+      //  this.idPaper, this.curValue,
+      //  this.liAuthors.Count,string.Join("|", this.liAuthors),
+      //  this.year, (this.venue==""?"NoName":this.venue), 
+      //  this.citationnumber,
+      //  this.liReferenceIds.Count(), string.Join("|", this.liReferenceIds));
+    }
+    public string ToStringHashcode()
+    {
+      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\r\n",
+        this.idPaper, this.title, this.title.GetHashCode().ToString(),
+        this.year, (this.venue == "" ? "NoName" : this.venue),curValue);
     }
 
 
