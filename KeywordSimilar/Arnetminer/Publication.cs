@@ -13,19 +13,19 @@ namespace Arnetminer
     public int idPaper { get; set; }
     public string title { get; set; }
     public string[] strAuthors { get; set; }
-    public List<int> liAuthors { get; set; }
+    public HashSet<int> liAuthors { get; set; }
     public Dictionary<int,Author> dicAuthors { get; set; }
 
     public int year { get; set; }
     public string venue { get; set; }
     public int idVenue { get; set; }
     public int citationnumber { get; set; }
-    public List<int> liCitationIds { get; set; }
+    public HashSet<int> liCitationIds { get; set; }
     public Dictionary<int, Publication> dicCitationPubs { get; set; }
     public int index { get; set; }
     public int arnetid { get; set; }
     public string strAbstract { get; set; }
-    public List<int> liReferenceIds { get; set; }
+    public HashSet<int> liReferenceIds { get; set; }
     public Dictionary<int,Publication> dicReferencePubs {  get; set; }
 
     public double oldValue { get; set; }
@@ -59,12 +59,12 @@ namespace Arnetminer
       this.liReferenceIds = null;
       this.curValue = oldValue = 0;
       dicAuthors = new Dictionary<int, Author>();
-      liAuthors = new List<int>();      
+      liAuthors = new HashSet<int>();      
     }
 
     public Publication(int idPaper, double curvalue, string titles, string[] authors,
       int year, string conference, int citationnumber, int index,
-      int arnetid, string strAbstract, List<int> referenceids)
+      int arnetid, string strAbstract, HashSet<int> referenceids)
     {
       this.idPaper = idPaper;
       this.title = titles;
@@ -79,8 +79,15 @@ namespace Arnetminer
       this.curValue = curvalue;
       this.oldValue = 0;
       dicAuthors = new Dictionary<int, Author>();
-      liAuthors = new List<int>();
-
+      liAuthors = new HashSet<int>();
+      authors.ToList().ForEach(a =>
+      {
+        if (!liAuthors.Contains(a.GetHashCode()))
+        {
+          liAuthors.Add(a.GetHashCode());
+        }
+      });
+      liCitationIds = new HashSet<int>();      
     }
     
     static public Publication ReadFromLine(string line, bool withtitle)
@@ -92,27 +99,28 @@ namespace Arnetminer
         curValue = Convert.ToDouble(datas[1].Trim('|')),
         title = (withtitle ? datas[2].Trim('|') : ""),
         strAuthors = datas[3].Trim('|').Split('|'),
-        liAuthors = new List<int>(),
-        liCitationIds = new List<int>(),
+        liAuthors = new HashSet<int>(),
+        liCitationIds = new HashSet<int>(),
         year = Convert.ToInt32(datas[4].Trim('|')),
         venue = datas[5].Trim('|'),
         citationnumber = Convert.ToInt32(datas[6].Trim('|')),
         index = Convert.ToInt32(datas[7].Trim('|')),
         arnetid = Convert.ToInt32(datas[8].Trim('|')),
         //strAbstract = datas[9].Trim('|'),
-        liReferenceIds = new List<int>()
+        liReferenceIds = new HashSet<int>()
       };
-      pub.venue = (pub.venue == string.Empty ? "NoName" : pub.venue);
-      Debug.Assert(pub.venue != string.Empty);
-      string[] strRefIds = datas[10].Trim('|').Split('|');
-      if (strRefIds.Length > 0)
+      pub.strAuthors.ToList().ForEach(aid =>
       {
-        foreach (string ids in strRefIds)
-        {
-          if (ids != "")
-            pub.liReferenceIds.Add(Convert.ToInt32(ids));
-        }
-      }
+        if (aid != "")
+          pub.liAuthors.Add(Convert.ToInt32(aid.GetHashCode()));
+      });
+      pub.venue = (pub.venue == string.Empty ? "NoName" : pub.venue);
+      
+      datas[10].Trim('|').Split('|').ToList().ForEach(ids =>
+      {
+        if (ids != "")
+          pub.liReferenceIds.Add(Convert.ToInt32(ids));
+      });       
       return pub;
     }
     static public Publication FromLine(string line)
@@ -127,15 +135,15 @@ namespace Arnetminer
            curValue = Convert.ToDouble(datas[1].Trim('|')),
            title = "",//datas[2]
            strAuthors = datas[3].Trim('|').Split('|'),
-           liAuthors = new List<int>(),  //datas[3]        
+           liAuthors = new HashSet<int>(),  //datas[3]        
            year = Convert.ToInt32(datas[4].Trim('|')),
            venue = datas[5].Trim('|'),
            citationnumber = Convert.ToInt32(datas[6].Trim('|')),
            index = Convert.ToInt32(datas[7].Trim('|')),
            arnetid = Convert.ToInt32(datas[8].Trim('|')),
            //strAbstract = datas[9].Trim('|'),
-           liReferenceIds = new List<int>(), //datas[10]
-           liCitationIds = new List<int>(),//datas[11]
+           liReferenceIds = new HashSet<int>(), //datas[10]
+           liCitationIds = new HashSet<int>(),//datas[11]
            idVenue = Convert.ToInt32(datas[12].Trim('|')),
          };
         pub.venue = (pub.venue == string.Empty ? "NoName" : pub.venue);
@@ -248,10 +256,19 @@ namespace Arnetminer
     }
     public override string ToString()
     {
-      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}\t|{9}\t|{10}\t|{11}\t|{12}\r\n",
+      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}\t|{9}\t|{10}\t|{11}\t|{12}",
         this.idPaper, this.curValue, this.title, string.Join("|", this.liAuthors),
         this.year, this.venue, this.citationnumber,
         this.index, this.arnetid, this.strAbstract, 
+        string.Join("|", this.liReferenceIds),
+        string.Join("|", this.liCitationIds), this.idVenue);
+    }
+    public string ToStringFullAuthor()
+    {
+      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}\t|{9}\t|{10}\t|{11}\t|{12}",
+        this.idPaper, this.curValue, this.title, string.Join("|", this.strAuthors),
+        this.year, this.venue, this.citationnumber,
+        this.index, this.arnetid, this.strAbstract,
         string.Join("|", this.liReferenceIds),
         string.Join("|", this.liCitationIds), this.idVenue);
     }
@@ -285,6 +302,14 @@ namespace Arnetminer
         x => dicAllPubs[x].oldValue / dicAllPubs[x].liReferenceIds.Count) : 0;
       curValue = a1 * authorsum + a2 * conferencesum + a3 * citesum;// +(1 - a1 - a2 - a3) * oldValue; 
       return curValue;
+    }
+
+    internal string ToStringCitations()
+    {
+      return string.Format("{0}\t|{1}\t|{2}\t|{3}\t|{4}\t|{5}\t|{6}\t|{7}\t|{8}",
+       this.idPaper, this.title, this.year, this.venue, string.Join("|", this.liReferenceIds),
+       this.liReferenceIds.Count, string.Join("|", this.liReferenceIds), 
+       this.liCitationIds.Count, string.Join("|", this.liCitationIds));
     }
   }
 }

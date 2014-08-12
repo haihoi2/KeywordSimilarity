@@ -15,8 +15,10 @@ namespace Arnetminer
   {
     const string strTitle = "#*";
     const string strAuthors = "#@";
-    const string strYear = "#year";
-    const string strConfVenue = "#conf";
+    const string strYear = "#year"; //V6
+    const string strYearV7 = "#t"; //V7
+    const string strConfVenue = "#conf"; //V6
+    const string strConfVenueV7 = "#c"; //V7
     const string strCitationNumber = "#citation";//(both -1 and 0 means none)
     const string strIndex = "#index";
     const string strArnetid = "#arnetid";
@@ -24,87 +26,103 @@ namespace Arnetminer
     const string strAbstract = "#!";
 
     static private string directory = @"G:\dblp\2014\dblp-2014-06-28\";//@"G:\dblp\2013\";
-    /*public static Dictionary<int, Publication> dicAllPubs = Publication.dicAllPubs;
-    public static Dictionary<int, Author> dicAllAuthors = Author.dicAllAuthors;
-    public static Dictionary<int, Venue> dicAllVenues = Venue.dicAllVenues;
-    */public static Dictionary<string, Venue> dicStrVenues = new Dictionary<string, Venue>();
-    public static Dictionary<string, Author> dicStrAuthors = new Dictionary<string, Author>();
-  
+
+    public static Dictionary<string, Venue> dicStrVenues = new Dictionary<string, Venue>();
+   
     public static int totalVenue;
     public static int totalAuthor;
 
     static void Main(string[] args)
     {
       totalAuthor = totalVenue = 0;
-
-      string fileauthor = "authors-1274359.csv";
-      string filevenue = "venues-8882.csv";
-      string filepub = "publications-2244017.csv";
-      /* remove not map dblp -----------------------------------*/
-      string filepubnotmapped = "pub-arnet-not-mapping-stemming-32631.csv";
-      List<Publication> liTitleArnet = ReadPublicationTitleFromFile(directory + filepubnotmapped, false);
-      List<int> liPubsnotMapped = (from x in liTitleArnet select x.idPaper).ToList();
-      liTitleArnet.Clear();
       
-      ReadPublicationFromFile(directory + filepub);
+     // string fileauthor = "authors-1274359.csv";
+     // string filevenue = "venues-8882.csv";
+     // string filepub = "publications-2244017.csv";
+     // /* remove not map dblp -----------------------------------*/
+     // string filepubnotmapped = "pub-arnet-not-mapping-stemming-32631.csv";
+     // List<Publication> liTitleArnet = ReadPublicationTitleFromFile(directory + filepubnotmapped, false);
+     // List<int> liPubsnotMapped = (from x in liTitleArnet select x.idPaper).ToList();
+     // liTitleArnet.Clear();
+      
+     //// ReadPublicationFromFile(directory + filepub);
      
-      foreach (int k in liPubsnotMapped)
-        Publication.dicAllPubs.Remove(k);
+     // foreach (int k in liPubsnotMapped)
+     //   Publication.dicAllPubs.Remove(k);
       
-      //Remove refid not in new dic
-      Parallel.ForEach(Publication.dicAllPubs, pub =>
-      {
-        if (pub.Value.idPaper == 500112)
-        {
-          Console.WriteLine(pub.Value.ToString());
-        }
-        pub.Value.liReferenceIds.RemoveAll(x => liPubsnotMapped.Contains(x));
-        if (pub.Value.idPaper == 500112)
-        {
-          Console.WriteLine(Publication.dicAllPubs[500112].ToString());
-        }
-      }
-      );
+     // //Remove refid not in new dic
+     // Parallel.ForEach(Publication.dicAllPubs, pub =>
+     // {
+     //   if (pub.Value.idPaper == 500112)
+     //   {
+     //     Console.WriteLine(pub.Value.ToString());
+     //   }
+     //   pub.Value.liReferenceIds.RemoveAll(x => liPubsnotMapped.Contains(x));
+     //   if (pub.Value.idPaper == 500112)
+     //   {
+     //     Console.WriteLine(Publication.dicAllPubs[500112].ToString());
+     //   }
+     // }
+     // );
       
-      UpdatingCitation();
+     //// UpdatingCitation();
 
-      /*------------------------------------------------------------*/
-      ReadAuthorFromFile(directory + fileauthor);
-      //Remove pubid of author not in new dic
-      Parallel.ForEach(Author.dicAllAuthors, au =>
-      {        
-        au.Value.liPublications.RemoveAll(x => liPubsnotMapped.Contains(x));        
-      }
-      );
-      ReadVenueFromFile(directory + filevenue);
-      //Remove pubid of venue not in new dic
-      Parallel.ForEach(Venue.dicAllVenues, ve =>
-      {
-        ve.Value.liPublications.RemoveAll(x => liPubsnotMapped.Contains(x));
-      }
-      );
+     // /*------------------------------------------------------------*/
+     // ReadAuthorFromFile(directory + fileauthor);
+     // //Remove pubid of author not in new dic
+     // //WriteToFileForMapping(Author.dicAllAuthors, "author-mapped-");
+      
+     // Parallel.ForEach(Author.dicAllAuthors, au =>
+     // {        
+     //   au.Value.liPublications.RemoveAll(x => liPubsnotMapped.Contains(x));        
+     // }
+     // );
+     // ReadVenueFromFile(directory + filevenue);
+     // //Remove pubid of venue not in new dic
+     // Parallel.ForEach(Venue.dicAllVenues, ve =>
+     // {
+     //   ve.Value.liPublications.RemoveAll(x => liPubsnotMapped.Contains(x));
+     // }
+     // );
 
-      liPubsnotMapped.Clear();
-      /* end remove not map dblp -----------------------------------*/
+     // liPubsnotMapped.Clear();
+     // /* end remove not map dblp -----------------------------------*/
 
-      WriteToFile(Author.dicAllAuthors, "a-mapped-");
-      WriteToFile(Venue.dicAllVenues, "v-mapped-");
-      WriteToFile(Publication.dicAllPubs, 1, "p-mapped-");
+     // WriteToFile(Author.dicAllAuthors, "a-mapped-");
+     // WriteToFile(Venue.dicAllVenues, "v-mapped-");
+     // WriteToFile(Publication.dicAllPubs, 1, "p-mapped-");
 
-      int iCite = Publication.dicAllPubs.Values.Sum(x => x.liCitationIds.Count);
-      int iRef = Publication.dicAllPubs.Values.Sum(x => x.liReferenceIds.Count);
-      Console.WriteLine("Cite={0}, Ref={1}", iCite, iRef);
-      DoNStarCalculation(directory, 1000, 1, 0.25, 0.25, 0.45);
-      DoPageRankCalculation(directory, 1000, 1, 0.45);
+     // int iCite = Publication.dicAllPubs.Values.Sum(x => x.liCitationIds.Count);
+     // int iRef = Publication.dicAllPubs.Values.Sum(x => x.liReferenceIds.Count);
+     // Console.WriteLine("Cite={0}, Ref={1}", iCite, iRef);
+     // DoNStarCalculation(directory, 1000, 1, 0.25, 0.25, 0.45);
+     // DoPageRankCalculation(directory, 1000, 1, 0.45);
 
 
 
       /*parse raw data ----------------------------------------------------------
-      string filename = "acm_output.txt";
-      //ParseDataArnetMiner(directory + filename);
-      ---------------------------------------------------------------------------*/
+      //V6-------------------------------------*/
+      //string filename = "publications.txt";
+      //directory = @"G:\dblp\2014\DBLP_Citation_2014_May\";
+      string filename = "publications.txt";
+      directory = @"G:\dblp\2014\DBLP_Citation_2014_May\";
+      //ParseCitationArnetMinerV7(directory + filename, "arnetid-v7-");
+      ParseTitleArnetMinerV7(directory + filename, "arnet-title-v7-");
+      
+      //////V7-------------------------------------*/
+      //string filename = "publications.txt";
+      //directory = @"G:\dblp\2014\DBLP_Citation_2014_May\";
+      //string[] files = Directory.GetFiles(directory).ToArray();
+      //int i = 0;
+      //ParseCitationArnetMinerV7(directory + filename, "citations-v7-");
+      //foreach (string f in files)
+      //{
+      //  ParseDataArnetMinerV7(f, "publication-", ref i);
+      //}
+      /*---------------------------------------------------------------------------*/
       /*Parse structure data to entity-------------------------------------------
-       * string strPrefixfile = "publication-*";      
+      string strPrefixfile = "publication-*";
+      directory = @"G:\dblp\2014\DBLP_Citation_2014_May\";
       string[] files = Directory.GetFiles(directory,strPrefixfile).ToArray();     
       foreach (string f in files)
       {
@@ -113,18 +131,119 @@ namespace Arnetminer
       UpdatingCitation();
       int iCite = Publication.dicAllPubs.Values.Sum(x => x.liCitationIds.Count);
       int iRef = Publication.dicAllPubs.Values.Sum(x => x.liReferenceIds.Count);
+      Console.WriteLine("Citation number: {0} vs ref number:{1}", iCite, iRef);
+      
+      WriteCitationToFile(Publication.dicAllPubs, "citation-");
       WriteToFile(Author.dicAllAuthors, "authors-");
       WriteToFile(Venue.dicAllVenues, "venues-");
-      WriteToFile(Publication.dicAllPubs, 1, "publications-");
-       ---------------------------------------------------------------------------*/
-      /*---------------------------------------------------------------------------
-      MappingArnetDBLP();
-      ----------------------------------------------------------------------------*/
+      WriteToFile(Publication.dicAllPubs, 1, "publications-",false);
+      /*---------------------------------------------------------------------------*/
+      /*---------------------------------------------------------------------------*/
+      //MappingArnetPublicationDBLP();
+      /*----------------------------------------------------------------------------*/
+      ///*---------------------------------------------------------------------------
+    // MappingArnetAuthorDBLP();
+     //----------------------------------------------------------------------------*/
       Console.WriteLine("DONE");
       Console.ReadLine();
     }
 
-    private static void MappingArnetDBLP()
+    private static void WriteCitationToFile(Dictionary<int, Publication> dicPubs, string filename)
+    {
+      using (StreamWriter file = new System.IO.StreamWriter(
+        Path.GetFullPath(directory + filename +
+        (Publication.dicAllPubs.Count).ToString()+".csv")))
+      {
+        file.WriteLine("idPaper\t|liReferenceIds\t|liCitationIds\t|Venue");
+        foreach (Publication p in dicPubs.Values)
+        {
+          file.WriteLine(p.ToStringCitations());
+        }
+      }
+    }
+
+    private static void MappingArnetAuthorDBLP()
+    {
+      string fileauthordblp = "author-dblp-for-mapping.csv"; //"pub-title-dblp.csv"
+      string fileauthorarnet = "author-arnet-for-mapping-1274359.csv";//"pub-title-arnet.csv"
+
+      List<Author> liAuthorArnet = ReadAuthorForMappingFromFile(directory + fileauthorarnet, false);
+      List<Author> liAuthorDBLP = ReadAuthorForMappingFromFile(directory + fileauthordblp, true);
+
+
+      Author aDblp = liAuthorDBLP[0];
+      Author aArnet = liAuthorArnet[0];
+      int i = 0, j = 0, count = 0;
+      while (i < liAuthorDBLP.Count && j < liAuthorArnet.Count)
+      {
+        while ((i < liAuthorDBLP.Count) && (aDblp.idAuthor < aArnet.authorName.GetHashCode()))
+        {
+          i++;
+          if (i < liAuthorDBLP.Count)
+            aDblp = liAuthorDBLP[i];
+        }
+        while ((j < liAuthorArnet.Count) && (aDblp.idAuthor > aArnet.authorName.GetHashCode()))
+        {
+          j++;
+          if (j < liAuthorArnet.Count)
+            aArnet = liAuthorArnet[j];
+        }
+        if (aDblp.idAuthor == aArnet.authorName.GetHashCode())
+        {
+          aArnet.curValue = -100;
+          aDblp.curValue = -100;
+          aArnet.liAlias = aDblp.liAlias;
+          count++;
+          i++; j++;
+          if (i < liAuthorDBLP.Count)
+            aDblp = liAuthorDBLP[i];
+          if (j < liAuthorArnet.Count)
+            aArnet = liAuthorArnet[j];
+        }
+
+      }
+      WriteToFile(liAuthorDBLP.Where(x => x.curValue != -100).ToList(), "author-dblp-not-mapping-" +
+        liAuthorDBLP.Where(x => x.curValue != -100).Count().ToString());
+      liAuthorDBLP.Clear();
+      WriteToFile(liAuthorArnet.Where(x => x.curValue != -100).ToList(), "author-arnet-not-mapping-" + 
+        liAuthorArnet.Where(x => x.curValue != -100).Count().ToString());
+      WriteToFile(liAuthorArnet.Where(x => x.curValue == -100).ToList(), "author-mapping-" +
+        liAuthorArnet.Where(x => x.curValue == -100).Count().ToString());
+    }
+
+    private static List<Author> ReadAuthorForMappingFromFile(string str, bool isDBLP)
+    {
+      IEnumerable<string> lines = File.ReadLines(Path.GetFullPath(str));
+      var line = lines.Where(x => (x != ""));
+      var results = new ConcurrentQueue<Author>();
+      Parallel.ForEach(line, l =>
+      {
+        Author pub = Author.FromHashCodeLine(l, isDBLP);
+        if (pub != null)
+        {
+          results.Enqueue(pub);
+        }
+      });
+      if (isDBLP)
+        return results.OrderBy(x => x.idAuthor).ToList();
+      else
+        return results.OrderBy(x => x.authorName.GetHashCode()).ToList();
+    }
+
+    private static void WriteToFileForMapping(Dictionary<int, Author> dicAuthors, string filename)
+    {
+      using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + filename +
+     (dicAuthors.Count).ToString() + ".csv")))
+      {
+        file.Write("idAuthor\t|authorName\t|HashCode\t|curValue\t|idDBLPCCode");
+        dicAuthors.Values.ToList().ForEach(dA =>
+        {
+          file.WriteLine(dA.ToStringForMapping());
+        });
+      }
+    }
+
+    private static void MappingArnetPublicationDBLP()
     {
       string filetitledblp = "pub-dblp-not-mapping-479058.csv"; //"pub-title-dblp.csv"
       string filetitlearnet = "pub-arnet-not-mapping-34306.csv";//"pub-title-arnet.csv"
@@ -210,10 +329,22 @@ namespace Arnetminer
     {
       using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + filename + ".csv")))
       {
-        file.Write("idPaper\t|title\t|HashCode\t|year\t|venue\t|curValue\r\n");
+        file.WriteLine("idPaper\t|title\t|HashCode\t|year\t|venue\t|curValue\r\n");
         foreach (Publication p in li)
-        {          
-          file.Write(p.ToStringHashcode());
+        {
+          file.WriteLine(p.ToStringHashcode());
+        }
+      }
+      GC.Collect();
+    }
+    private static void WriteToFile(List<Author> li, string filename)
+    {
+      using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + filename + ".csv")))
+      {
+        file.WriteLine("idAuthor\t|authorName\t|HashCode\t|curValue\t|idDBLPCCode\t|liAlias");
+        foreach (Author a in li)
+        {
+          file.WriteLine(a.ToStringWithAlias());
         }
       }
       GC.Collect();
@@ -236,11 +367,11 @@ namespace Arnetminer
         if (step % 10 == 0)
         {
           Console.WriteLine("Loop: {0} - Elapse:{1}", step, sw.Elapsed);
-          WriteToFile(Publication.dicAllPubs, 1, string.Format("pub-pk-{0}-{1}",step,max));
+          WriteToFile(Publication.dicAllPubs, 1, string.Format("pub-pk-{0}-{1}",step,max),false);
         }
         step++;
       }
-      WriteToFile(Publication.dicAllPubs, 1, string.Format("pub-pk-{0}-{1}", step, max));
+      WriteToFile(Publication.dicAllPubs, 1, string.Format("pub-pk-{0}-{1}", step, max),false);
       Console.WriteLine("Total Step:{0} Time: {1}- Done", step, sw.Elapsed);
     }
 
@@ -304,12 +435,28 @@ namespace Arnetminer
 
     private static void UpdatingCitation()
     {
+      StringBuilder sb = new StringBuilder();
       foreach (Publication p in Publication.dicAllPubs.Values)
       {
-        foreach(int refid in p.liReferenceIds)
-           Publication.dicAllPubs[refid].liCitationIds.Add(p.idPaper);
+        foreach (int refid in p.liReferenceIds)
+        {
+          try
+          {
+            Publication.dicAllPubs[refid].liCitationIds.Add(p.idPaper);
+          }
+          catch (Exception ex)
+          {
+            //Console.WriteLine("Error: {0} - at Publication:{1}", ex.Message, p.ToString());
+             sb.AppendLine(string.Format("{0}\t{1}",p.idPaper, refid));
+          }
+        }
+      } 
+      using (StreamWriter sw = new StreamWriter(directory + "not-found-reference.csv"))
+      {
+        sw.Write(sb.ToString());
       }
     }
+  
     
     public static void DoNStarCalculation(string directory, 
      int stoploop, double stopval, double a1, double a2, double a3)
@@ -375,14 +522,14 @@ namespace Arnetminer
         {
           WriteToFile(Author.dicAllAuthors, "author-" + step.ToString() + "-" + max.ToString() + "-");
           WriteToFile(Venue.dicAllVenues, "venue-" + step.ToString() + "-" + max.ToString());
-          WriteToFile(Publication.dicAllPubs, 1, "pub-" + step.ToString() + "-" + max.ToString());
+          WriteToFile(Publication.dicAllPubs, 1, "pub-" + step.ToString() + "-" + max.ToString(),false);
         }
         Console.WriteLine("Loop - 1: {0} - Elapse:{1}", step, sw.Elapsed);        
         step++;
       }
       WriteToFile(Author.dicAllAuthors, "author-" + step.ToString() + "-" + max.ToString() + "-");
       WriteToFile(Venue.dicAllVenues, "venue-" + step.ToString() + "-" + max.ToString());
-      WriteToFile(Publication.dicAllPubs, 1, "pub-" + step.ToString() + "-" + max.ToString());
+      WriteToFile(Publication.dicAllPubs, 1, "pub-" + step.ToString() + "-" + max.ToString(),false);
       Console.WriteLine("Done");
     }
     
@@ -436,27 +583,7 @@ namespace Arnetminer
       else
         return results.OrderBy(x => x.arnetid).ToList();
     }
-    public static List<Publication> ReadPublicationTitleNotMappingFromFile(string str, bool isDBLP, bool notMapping)
-    {
-      IEnumerable<string> lines = File.ReadLines(Path.GetFullPath(str));
-      var line = lines.Where(x => (x != ""));
-      var results = new ConcurrentQueue<Publication>();
-      foreach (string l in line)
-      //Parallel.ForEach(line, l =>
-      {
-        Publication pub = Publication.FromHashCodeLine(l, isDBLP,notMapping);
-        if (pub != null)
-        {
-          results.Enqueue(pub);
-        }
-      }
-      //);
-      if (isDBLP)
-        return results.OrderBy(x => x.index).ToList();
-      else
-        return results.OrderBy(x => x.arnetid).ToList();
-    }
-
+   
     public static void ReadAuthorFromFile(string str)
     {
       IEnumerable<string> lines = File.ReadLines(Path.GetFullPath(str));
@@ -505,34 +632,35 @@ namespace Arnetminer
             Venue.dicAllVenues.Add(v.idVenue, v);
             dicStrVenues.Add(v.venueName, v);
           }
-          //add authors
-          foreach (string au in pub.strAuthors)
-          {
-            if (dicStrAuthors.Keys.Contains(au))
-            {
-              a = dicStrAuthors[au];
-              if (!a.liPublications.Contains(pub.idPaper))
-              {
-                a.liPublications.Add(pub.idPaper);
-              }
-            }
-            else
-            {
-              totalAuthor++;
-              a = new Author()
-              {
-                idAuthor = totalAuthor,
-                authorName = au
-              };
-              a.liPublications.Add(pub.idPaper);
-              Author.dicAllAuthors.Add(a.idAuthor, a);
-              dicStrAuthors.Add(a.authorName, a);
-            }
-            if (!pub.liAuthors.Contains(a.idAuthor))
-            {
-              pub.liAuthors.Add(a.idAuthor);
-            }
-          }
+          ////add authors
+          //foreach (string au in pub.strAuthors)
+          //{
+          //  if (Author.dicAllAuthors.Keys.Contains(au.GetHashCode()))
+          //  {
+          //    a = Author.dicAllAuthors[au.GetHashCode()];
+          //    if (!a.liPublications.Contains(pub.idPaper))
+          //    {
+          //      a.liPublications.Add(pub.idPaper);
+          //    }
+          //  }
+          //  else
+          //  {
+          //    totalAuthor++;
+          //    a = new Author()
+          //    {
+          //      idAuthor = au.GetHashCode(),
+          //      authorName = au,
+          //      liAlias = new List<int>()
+          //    };
+          //    a.liPublications.Add(pub.idPaper);
+          //    Author.dicAllAuthors.Add(a.idAuthor, a);
+             
+          //  }
+          //  if (!pub.liAuthors.Contains(a.idAuthor))
+          //  {
+          //    pub.liAuthors.Add(a.idAuthor);
+          //  }
+          //}
           Publication.dicAllPubs.Add(pub.idPaper, pub);
         }
         catch (Exception ex)
@@ -542,13 +670,13 @@ namespace Arnetminer
       }
     }
 
-    private static void ParseDataArnetMiner(string file)
+    private static void ParseDataArnetMiner(string filein, string prefixfileout)
     {
       //using (FileStream fs = File.Open(directory + filename, FileMode.Open, FileAccess.Read))
       //using (BufferedStream bs = new BufferedStream(fs))
       // using (StreamReader sr = new StreamReader(bs))
 
-      using (StreamReader sr = File.OpenText(file))
+      using (StreamReader sr = File.OpenText(filein))
       {
         string s;
         string strcurTitle = "#*";
@@ -560,7 +688,7 @@ namespace Arnetminer
         string strcurAbstract = "#!";
         Publication curPublication = null;
         List<string> strcurAuthors = new List<string>();
-        List<int> icurRefId = new List<int>();
+        HashSet<int> icurRefId = new HashSet<int>();
         int i = 0;
         curPublication = new Publication();
         while ((s = sr.ReadLine()) != null)
@@ -590,13 +718,13 @@ namespace Arnetminer
               if ((Publication.dicAllPubs.Count) == 500000)
               {
                 i++;
-                WriteToFile(Publication.dicAllPubs, i, "pub-");
+                WriteToFile(Publication.dicAllPubs, i, prefixfileout,true);
                 Publication.dicAllPubs.Clear();
               }
             }
             //RESET create new paper
             curPublication = null;
-            icurRefId.Clear();
+            icurRefId = new HashSet<int>();
             strcurTitle = s.Substring(strTitle.Length);
             strcurAuthors.Clear();
           }
@@ -638,30 +766,328 @@ namespace Arnetminer
               Console.WriteLine("Unknown tag: string=" + s);
           }
         }
-        WriteToFile(Publication.dicAllPubs, 1, "pub-");
+        WriteToFile(Publication.dicAllPubs, 1, prefixfileout,true);
+      }
+    }
+    private static void ParseDataArnetMinerV7(string filein, string prefixfileout, ref int i)
+    {
+      //using (FileStream fs = File.Open(directory + filename, FileMode.Open, FileAccess.Read))
+      //using (BufferedStream bs = new BufferedStream(fs))
+      // using (StreamReader sr = new StreamReader(bs))
+
+      using (StreamReader sr = File.OpenText(filein))
+      {
+        string s;
+        string strcurTitle = "#*";
+        int curYear = 0;
+        string strcurConfVenue = "#con";
+        int curCitationNumber = 0;
+        int curIndex = -1;
+        int curArnetid = -1;
+        string strcurAbstract = "#!";
+        Publication curPublication = null;
+        List<string> strcurAuthors = new List<string>();
+        HashSet<int> icurRefId = new HashSet<int>();
+        
+        curPublication = new Publication();
+        while ((s = sr.ReadLine()) != null)
+        {
+          if ((s=s.Trim()).Equals(string.Empty))
+            continue;
+          if (s.StartsWith(strTitle))
+          {
+            //save current paper
+            if (curPublication == null)
+            {
+              curPublication = new Publication(
+                curIndex,
+                100,
+                strcurTitle,
+                strcurAuthors.ToArray(),
+                curYear,
+                strcurConfVenue,
+                curCitationNumber,
+                curIndex,
+                curArnetid,
+                strcurAbstract,
+                icurRefId);
+              if (!Publication.dicAllPubs.Keys.Contains(curIndex))
+                Publication.dicAllPubs.Add(curIndex, curPublication);
+              else
+              {
+                curPublication.liAuthors.ToList().ForEach(a =>
+                {
+                  Publication.dicAllPubs[curIndex].liAuthors.Add(a);
+                });
+                curPublication.liReferenceIds.ToList().ForEach(ir =>
+                {
+                  Publication.dicAllPubs[curIndex].liReferenceIds.Add(ir);
+                });
+              }
+              if ((Publication.dicAllPubs.Count) % 500000 == 0)
+              {
+                Console.WriteLine("dic={0}", Publication.dicAllPubs.Count * i);
+              }
+              if ((Publication.dicAllPubs.Count) == 500000)
+              {
+                i++;
+                WriteToFile(Publication.dicAllPubs, i, prefixfileout, true);
+                //Publication.dicAllPubs.Clear();
+              }
+            }
+            //RESET create new paper
+            curPublication = null;
+            icurRefId = new HashSet<int>();
+            strcurTitle = s.Substring(strTitle.Length);
+            strcurAuthors.Clear();
+          }
+          else if (s.StartsWith(strAuthors))
+          {
+            strcurAuthors.AddRange(s.Substring(strAuthors.Length).Split(','));
+          }
+          else if (s.StartsWith(strYearV7))
+          {
+            curYear = Convert.ToInt32(s.Substring(strYearV7.Length));
+          }
+          else if (s.StartsWith(strConfVenueV7))
+          {
+            strcurConfVenue = s.Substring(strConfVenueV7.Length);
+          }
+          else if (s.StartsWith(strCitationNumber))
+          {
+            curCitationNumber = Convert.ToInt32(s.Substring(strCitationNumber.Length));
+          }
+          else if (s.StartsWith(strIndex))
+          {
+            curIndex = Convert.ToInt32(s.Substring(strIndex.Length));
+          }
+          else if (s.StartsWith(strArnetid))
+          {
+            curArnetid = Convert.ToInt32(s.Substring(strArnetid.Length));
+          }
+          else if (s.StartsWith(strRefId))
+          {
+            if (!s.Substring(strRefId.Length).Trim().Equals(string.Empty))
+              icurRefId.Add(Convert.ToInt32(s.Substring(strRefId.Length).Trim()));
+          }
+          else if (s.StartsWith(strAbstract))
+          {
+            strcurAbstract = s.Substring(strAbstract.Length);
+          }
+          else
+          {
+            if (s.Length != 0)
+              Console.WriteLine("Unknown tag: string=" + s);
+          }
+        }
+        WriteToFile(Publication.dicAllPubs, 1, prefixfileout, true);
+      }
+    }
+    
+    private static void ParseCitationArnetMinerV7(string filein, string prefixfileout)
+    {
+      //using (FileStream fs = File.Open(directory + filename, FileMode.Open, FileAccess.Read))
+      //using (BufferedStream bs = new BufferedStream(fs))
+      // using (StreamReader sr = new StreamReader(bs))
+
+      using (StreamReader sr = File.OpenText(filein))
+      {
+        string s;
+        string strcurTitle = "#*";
+        int curYear = 0;
+        string strcurConfVenue = "#con";
+        int curCitationFrom = 0;
+        int curCitationTo = -1;
+        int curArnetid = -1;
+        string strcurAbstract = "#!";
+        Citation curCitation = null;
+        List<string> strcurAuthors = new List<string>();
+        HashSet<int> icurRefId = new HashSet<int>();
+
+        curCitation = new Citation();
+        while ((s = sr.ReadLine()) != null)
+        {
+          if ((s = s.Trim()).Equals(string.Empty))
+            continue;
+          if (s.StartsWith(strTitle))
+          {
+            //save current citation
+            //if (icurRefId.Count > 0)
+            {
+              //icurRefId.ToList().ForEach(idTo =>
+              {
+                if (!Citation.dicAllCitations.Keys.Contains(new Tuple<int, int>(curCitationFrom, curArnetid)))
+                  Citation.dicAllCitations.Add(new Tuple<int, int>(curCitationFrom, curArnetid),
+                    new Citation() { idArnetFrom = curCitationFrom, idArnetTo = curArnetid });
+              }
+              //);
+            }
+            //RESET create new paper
+            curCitation = null;
+            icurRefId = new HashSet<int>();
+            strcurTitle = s.Substring(strTitle.Length);
+            strcurAuthors.Clear();
+          }
+          else if (s.StartsWith(strAuthors))
+          {
+            strcurAuthors.AddRange(s.Substring(strAuthors.Length).Split(','));
+          }
+          else if (s.StartsWith(strYearV7))
+          {
+            curYear = Convert.ToInt32(s.Substring(strYearV7.Length));
+          }
+          else if (s.StartsWith(strConfVenueV7))
+          {
+            strcurConfVenue = s.Substring(strConfVenueV7.Length);
+          }
+          else if (s.StartsWith(strCitationNumber))
+          {
+            //curCitationNumber = Convert.ToInt32(s.Substring(strCitationNumber.Length));
+          }
+          else if (s.StartsWith(strIndex))
+          {
+            curCitationFrom = Convert.ToInt32(s.Substring(strIndex.Length));
+          }
+          else if (s.StartsWith(strArnetid))
+          {
+            curArnetid = Convert.ToInt32(s.Substring(strArnetid.Length));
+          }
+          else if (s.StartsWith(strRefId))
+          {
+            if (!s.Substring(strRefId.Length).Trim().Equals(string.Empty))
+              icurRefId.Add(Convert.ToInt32(s.Substring(strRefId.Length).Trim()));
+          }
+          else if (s.StartsWith(strAbstract))
+          {
+            strcurAbstract = s.Substring(strAbstract.Length);
+          }
+          else
+          {
+            if (s.Length != 0)
+              Console.WriteLine("Unknown tag: string=" + s);
+          }
+        }
+        WriteToFile(Citation.dicAllCitations, prefixfileout);
       }
     }
 
-    private static void WriteToFile(Dictionary<int, Publication> dicPubs, int round, string filename)
+    private static void ParseTitleArnetMinerV7(string filein, string prefixfileout)
+    {
+      //using (FileStream fs = File.Open(directory + filename, FileMode.Open, FileAccess.Read))
+      //using (BufferedStream bs = new BufferedStream(fs))
+      // using (StreamReader sr = new StreamReader(bs))
+      using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + prefixfileout +
+       ".csv")))
+      {
+        file.WriteLine("ARNETID\tTITLE\tCONF");
+        using (StreamReader sr = File.OpenText(filein))
+        {
+          string s;
+          string strcurTitle = "#*";
+          int curYear = 0;
+          string strcurConfVenue = "#con";
+          int curCitationFrom = 0;
+          int curCitationTo = -1;
+          int curArnetid = -1;
+          string strcurAbstract = "#!";
+          Citation curCitation = null;
+          List<string> strcurAuthors = new List<string>();
+          HashSet<int> icurRefId = new HashSet<int>();
+          StringBuilder sb = new StringBuilder();
+          curCitation = new Citation();
+
+          while ((s = sr.ReadLine()) != null)
+          {
+            if ((s = s.Trim()).Equals(string.Empty))
+            {
+              file.WriteLine(string.Format("{0}\t{1}\t{2}", curCitationFrom, strcurTitle, strcurConfVenue));
+              continue;
+            }
+            if (s.StartsWith(strTitle))
+            {
+              //save current paper
+              //RESET create new paper
+              curCitation = null;
+              icurRefId = new HashSet<int>();
+              strcurTitle = s.Substring(strTitle.Length);
+              strcurAuthors.Clear();
+            }
+            else if (s.StartsWith(strAuthors))
+            {
+              strcurAuthors.AddRange(s.Substring(strAuthors.Length).Split(','));
+            }
+            else if (s.StartsWith(strYearV7))
+            {
+              curYear = Convert.ToInt32(s.Substring(strYearV7.Length));
+            }
+            else if (s.StartsWith(strConfVenueV7))
+            {
+              strcurConfVenue = s.Substring(strConfVenueV7.Length);
+            }
+            else if (s.StartsWith(strCitationNumber))
+            {
+              //curCitationNumber = Convert.ToInt32(s.Substring(strCitationNumber.Length));
+            }
+            else if (s.StartsWith(strIndex))
+            {
+              curCitationFrom = Convert.ToInt32(s.Substring(strIndex.Length));
+            }
+            else if (s.StartsWith(strArnetid))
+            {
+              curArnetid = Convert.ToInt32(s.Substring(strArnetid.Length));
+            }
+            else if (s.StartsWith(strRefId))
+            {
+              if (!s.Substring(strRefId.Length).Trim().Equals(string.Empty))
+                icurRefId.Add(Convert.ToInt32(s.Substring(strRefId.Length).Trim()));
+            }
+            else if (s.StartsWith(strAbstract))
+            {
+              strcurAbstract = s.Substring(strAbstract.Length);
+            }
+            else
+            {
+              if (s.Length != 0)
+                Console.WriteLine("Unknown tag: string=" + s);
+            }
+          }
+
+        }
+      }
+    }
+
+    private static void WriteToFile(Dictionary<Tuple<int, int>, Citation> dictionary, string filename)
+    {
+      using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + filename +
+        dictionary.Count.ToString() + ".csv")))
+      {
+        file.WriteLine("idFrom\tidTo");
+        foreach (Citation p in dictionary.Values)
+        {
+          file.WriteLine(p.ToString());
+        }
+      }
+    }
+
+    private static void WriteToFile(Dictionary<int, Publication> dicPubs, int round, string filename, bool isFullAuthorName)
     {            
       using (StreamWriter file = new System.IO.StreamWriter(Path.GetFullPath(directory + filename +
        (round * dicPubs.Count).ToString() + ".csv")))
       {
-        file.Write("idPaper\tcurValue\ttitle\tstring.Join(liAuthors)\t"+
+        file.WriteLine("idPaper\tcurValue\ttitle\tAuthors\t"+
           "year\tvenue\tcitationnumber\tindex\tarnetid\tstrAbstract\t"+
-          "string.Join(liReferenceIds)\tstring.Join(liCitationIds)\tidVenue\r\n");
-        //StringBuilder sb = new StringBuilder();
-        int count = 0;
-        //sb.AppendLine("idPaper~title~HashCode~year~venue");
+          "liReferenceIds\tliCitationIds\tidVenue");
         foreach (Publication p in dicPubs.Values)
         {
-         // sb.AppendLine(p.ToStringHashcode());
-         file.Write(p.ToString());
+         
+          if (isFullAuthorName)
+            file.WriteLine(p.ToStringFullAuthor());
+          else
+            file.WriteLine(p.ToString());
         }
-        //File.AppendAllText(Path.GetFullPath(directory + filename + ".csv"), sb.ToString());
-        //sb.Clear();
+       
       }
-      GC.Collect();
+      
     }
     private static void WriteToFileSimple(Dictionary<int, Publication> dicPubs, int count, string filename)
     {
